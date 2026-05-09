@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/components.css">
+  <link rel="stylesheet" href="styles/layout.css">
+  <link rel="stylesheet" href="styles/animation.css">
+</head>
+<body>
+
+<div class="server-notification" id="notification">
+  <div class="circle-container">
+    <div class="circle-ring"></div>
+    <div class="circle-fill"></div>
+    <span class="circle-text" id="notification-text"></span>
+  </div>
+</div>
+
+  <h2>
+    <span class="status-dot" id="dot"></span>
+    XposeDir - Simple local file sharing server
+  </h2>
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('server')">Server</button>
+  <button class="tab" onclick="switchTab('discover')">Discover</button>
+</div>
+
+<div id="tab-server">
+  <div class="url-box" id="url-box">
+    <div class="url-header">
+      <span class="url-label">Share this address:</span>
+      <div class="buttons">
+        <button class="btn-reveal" onclick="openURL()" id="open-btn">Open</button>
+        <button class="btn-reveal" onclick="toggleIP()" id="reveal-btn">Show IP</button>
+        <button class="btn-reveal" onclick="copyURL()" id="copy-btn">Copy</button>
+      </div>
+    </div>
+    <div class="url-row">
+      <span class="url-type">Browser</span>
+      <span class="url-value hidden" id="url-browser"></span>
+    </div>
+   
+  </div>
+
+  <div class="card">
+    <label>Selected folder</label>
+    <div class="folder-row">
+      <span id="ruta">No folder selected</span>
+      <button class="btn-small" onclick="selectFolder()" id="btn-change-folder">Change</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <label>Access permissions</label>
+    <div class="options">
+      <div for="radio-read" class="opt selected" id="opt-read" onclick="selectMode(this, 'read')">
+        <input type="radio" name="mode" checked id="radio-read">
+        <div>
+          <div class="opt-label">Read only <span class="tag tag-green">recommended</span></div>
+          <div class="opt-desc">Others can view and download files. They cannot modify or delete anything.</div>
+        </div>
+      </div>
+      <div for="radio-write" class="opt" id="opt-write" onclick="selectMode(this, 'write')">
+        <input type="radio" name="mode" id="radio-write">
+        <div>
+          <div class="opt-label">Read and write <span class="tag tag-orange">caution</span></div>
+          <div class="opt-desc">Others can also upload, edit and delete files.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <label>Port</label>
+    <div class="port-row">
+      <input type="number" id="port" value="3000" min="1024" max="65535">
+      <span class="port-hint">Others access via http://IP:<span id="port-preview">3000</span></span>
+    </div>
+  </div>
+
+  <button class="btn-main" onclick="toggleServer()" id="btn-action">Start server</button>
+  
+  </div>
+
+<div id="tab-discover" style="display:none">
+  <div class="card">
+    <div class="discover-header">
+      <span style="font-size:13px; color: var(--text-secondary)">XposeDir instances on your network</span>
+      <button class="btn-small" onclick="runDiscover()" id="discover-btn">Scan</button>
+    </div>
+    <div id="discover-results">
+      <p class="discover-empty">Hit Scan to search for instances</p>
+    </div>
+  </div>
+</div>
+ 
+
+  <script>
+    let folder = null
+    let mode = 'read'
+    let active = false
+    let ipVisible = false
+
+    async function loadConfig() {
+      const config = await window.api.getConfig()
+      if (config.ROUTE) {
+        folder = config.ROUTE
+        document.getElementById('ruta').textContent = folder
+      }
+      if (config.PORT) {
+        document.getElementById('port').value = config.PORT
+        document.getElementById('port-preview').textContent = config.PORT
+      }
+      toggleControls(false)
+    }
+
+    loadConfig()
+
+    async function selectFolder() {
+      const result = await window.api.chooseFolder()
+      if (result) {
+        folder = result
+        document.getElementById('ruta').textContent = folder
+      }
+    }
+
+    function selectMode(e,m) {
+      mode = m
+      document.getElementById('opt-read').classList.toggle('selected', m === 'read')
+      document.getElementById('opt-write').classList.toggle('selected', m === 'write')
+
+      console.log(e);
+const radio = e.querySelector('input[type="radio"]');
+  if (radio) {
+    radio.checked = true;
+  }
+document.querySelectorAll('.opt').forEach(opt => opt.classList.remove('selected'));
+  e.classList.add('selected');
+    }
+
+    document.getElementById('port').addEventListener('input', function() {
+      document.getElementById('port-preview').textContent = this.value || '3000'
+    })
+
+    let notificationRunning = false
+
+    function showNotification(text, type) {
+      if (notificationRunning) return
+      notificationRunning = true
+
+      const notification = document.getElementById('notification')
+      const notificationText = document.getElementById('notification-text')
+      const circleText = notification.querySelector('.circle-text')
+      const circleRing = notification.querySelector('.circle-ring')
+      const circleFill = notification.querySelector('.circle-fill')
+
+      notification.classList.remove('starting', 'stopping', 'show')
+      circleText.classList.remove('show')
+      circleRing.classList.remove('show')
+      circleFill.classList.remove('show')
+
+      void notification.offsetWidth
+
+      notificationText.textContent = text
+      notification.classList.add(type)
+      notification.classList.add('show')
+      circleText.classList.add('show')
+      circleRing.classList.add('show')
+      circleFill.classList.add('show')
+      document.documentElement.classList.add('no-scroll')
+
+      setTimeout(() => {
+        notification.classList.remove('show', type)
+        document.documentElement.classList.remove('no-scroll')
+        notificationRunning = false
+      }, 2500)
+    }
+
+    async function startServer() {
+      if (!folder) {
+        alert('Please select a folder first')
+        return
+      }
+      window.scrollTo(0, 0)
+      showNotification('Server started', 'starting')
+
+      const port = parseInt(document.getElementById('port').value) || 3000
+      const result = await window.api.startServer(folder, mode, port)
+
+      document.getElementById('url-browser').textContent = result.browser
+      
+      document.getElementById('url-box').classList.add('visible')
+      document.getElementById('dot').classList.add('active')
+      active = true
+      updateButtonState(true)
+
+      await window.api.saveConfig({ ROUTE: folder, PORT: port })
+      toggleControls(true)
+    }
+
+    async function stopServer() {
+      showNotification('Server stopped', 'stopping')
+
+      await window.api.stopServer()
+      document.getElementById('url-box').classList.remove('visible')
+      document.getElementById('dot').classList.remove('active')
+      document.getElementById('url-browser').textContent = ''
+
+      ipVisible = false
+      document.querySelectorAll('.url-value').forEach(el => el.classList.add('hidden'))
+      document.getElementById('reveal-btn').textContent = 'Show IP'
+      active = false
+      updateButtonState(false)
+      toggleControls(false)
+    }
+
+    function toggleServer() {
+      if (active) {
+        stopServer()
+      } else {
+        startServer()
+      }
+    }
+
+    function updateButtonState(running) {
+      const btn = document.getElementById('btn-action')
+      if (running) {
+        btn.textContent = 'Stop'
+        btn.classList.add('btn-stop')
+        btn.classList.remove('btn-start')
+      } else {
+        btn.textContent = 'Start'
+        btn.classList.add('btn-start')
+        btn.classList.remove('btn-stop')
+      }
+    }
+
+    function toggleControls(disabled) {
+      document.getElementById('btn-change-folder').disabled = disabled
+      document.getElementById('opt-read').style.pointerEvents = disabled ? 'none' : 'auto'
+      document.getElementById('opt-write').style.pointerEvents = disabled ? 'none' : 'auto'
+      document.getElementById('radio-read').disabled = disabled
+      document.getElementById('radio-write').disabled = disabled
+      document.getElementById('port').disabled = disabled
+      document.getElementById('opt-read').classList.toggle('disabled', disabled)
+      document.getElementById('opt-write').classList.toggle('disabled', disabled)
+    }
+
+    function toggleIP() {
+      ipVisible = !ipVisible
+      document.querySelectorAll('.url-value').forEach(el => {
+        el.classList.toggle('hidden', !ipVisible)
+      })
+      document.getElementById('reveal-btn').textContent = ipVisible ? 'Hide IP' : 'Show IP'
+    }
+
+    function copyURL() {
+      const url = document.getElementById('url-browser').textContent
+      if (!url) return
+      navigator.clipboard.writeText(url).then(() => {
+        const btn = document.getElementById('copy-btn')
+        btn.textContent = 'Copied!'
+        setTimeout(() => { btn.textContent = 'Copy' }, 1500)
+      })
+    }
+
+    function openURL() {
+      const url = document.getElementById('url-browser').textContent
+      if (!url) return
+      window.api.openExternal(url)
+    }
+
+
+    //discover section 
+    function switchTab(tab) {
+  document.getElementById('tab-server').style.display = tab === 'server' ? 'block' : 'none'
+  document.getElementById('tab-discover').style.display = tab === 'discover' ? 'block' : 'none'
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'))
+  event.target.classList.add('active')
+
+  if (tab === 'discover') {
+    runDiscover()
+  }
+}
+
+async function runDiscover() {
+  const btn = document.getElementById('discover-btn')
+  const results = document.getElementById('discover-results')
+  btn.textContent = 'Scanning...'
+  btn.disabled = true
+  results.innerHTML = '<p class="discover-empty">Scanning network...</p>'
+
+  const found = await window.api.discover()
+
+  btn.textContent = 'Scan'
+  btn.disabled = false
+
+  if (!found.length) {
+    results.innerHTML = '<p class="discover-empty">No instances found</p>'
+    return
+  }
+
+  results.innerHTML = found.map(function(s) {
+    const modeClass = s.mode === 'write' ? 'tag-orange' : 'tag-green'
+    const modeLabel = s.mode === 'write' ? 'Read & Write' : 'Read only'
+    return `<div class="discover-item">
+      <div>
+        <div class="discover-name">
+          ${s.name.replace('xposedir-', '')}
+          <span class="discover-tag ${modeClass}">${modeLabel}</span>
+        </div>
+        <div class="discover-url">${s.url}</div>
+      </div>
+      <button class="btn-small" onclick="window.api.openExternal('${s.url}')">Open</button>
+    </div>`
+  }).join('')
+}
+  </script>
+
+</body>
+</html>

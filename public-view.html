@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Index of <PATH></title>
+  <style>
+    :root {
+      --bg: #f5f5f5;
+      --surface: #ffffff;
+      --border: #e0e0e0;
+      --text: #222222;
+      --text-muted: #888888;
+      --link: #1a5fa8;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1a1a1a;
+        --surface: #252525;
+        --border: #333333;
+        --text: #eeeeee;
+        --text-muted: #777777;
+        --link: #6ab0f5;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; padding: 24px; background: var(--bg); color: var(--text); }
+    .header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+    h2 { font-size: 18px; font-weight: 500; }
+    .path { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+    table { border-collapse: collapse; width: 100%; background: var(--surface); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+    thead tr { border-bottom: 1px solid var(--border); }
+    th { padding: 10px 14px; font-size: 12px; font-weight: 500; color: var(--text-muted); text-align: left; }
+    td { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--text); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--bg); }
+    td.icon { width: 32px; padding-right: 0; }
+    td.size { color: var(--text-muted); font-size: 13px; text-align: right; white-space: nowrap; }
+    td.date { color: var(--text-muted); font-size: 13px; white-space: nowrap; }
+    a { color: var(--link); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #222; color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; opacity: 0; transition: opacity 0.3s; z-index: 100; pointer-events: none; }
+    .toast.show { opacity: 1; }
+    .upload-area {
+      display: <UPLOAD_DISPLAY>;
+      margin-bottom: 16px;
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      background: var(--surface);
+      transition: border-color .2s, background .2s;
+      cursor: pointer;
+    }
+    .upload-area.dragover { border-color: var(--link); background: var(--bg); }
+    .upload-area p { font-size: 14px; color: var(--text-muted); margin-bottom: 10px; }
+    .upload-btn {
+      display: inline-block;
+      padding: 7px 16px;
+      background: var(--link);
+      color: white;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      border: none;
+    }
+    .upload-btn:hover { opacity: .85; }
+    .upload-progress { margin-top: 10px; font-size: 13px; color: var(--text-muted); display: none; }
+    .write-controls { margin-bottom: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .mkdir-row { display: flex; gap: 8px; }
+    .mkdir-row input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      background: var(--surface);
+      color: var(--text);
+    }
+    .mkdir-row input:focus { outline: none; border-color: var(--link); }
+    .actions { width: 40px; }
+    .delete-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      opacity: 0.5;
+    }
+    .delete-btn:hover { opacity: 1; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div>
+      <h2>XPOSEDIR</h2>
+      <div class="path"><PATH></div>
+    </div>
+  </div>
+
+ <div class="write-controls" style="display: <UPLOAD_DISPLAY>">
+  <div class="upload-area" id="upload-area">
+    <p>Drag and drop files here or click to select</p>
+    <label class="upload-btn">
+      Choose files
+      <input type="file" id="file-input" multiple style="display:none">
+    </label>
+    <div class="upload-progress" id="upload-progress"></div>
+  </div>
+  <div class="mkdir-row write-controls" style="display: <UPLOAD_DISPLAY>">
+    <input onkeyup="enter()" type="text" id="folder-name" placeholder="New folder name" maxlength="64">
+    <button class="upload-btn" onclick="createFolder()">Create folder</button>
+  </div>
+</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th class="icon"></th>
+        <th>Name</th>
+        <th style="text-align: right">Size</th>
+        <th>Modified</th>
+        <th class="actions" style="width: 40px;"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <ROWS>
+    </tbody>
+  </table>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    var currentPath = '<PATH>'
+      function enter() {
+        if (event.key === 'Enter') {
+          createFolder()
+        }
+      }
+    function showToast(msg) {
+      var t = document.getElementById('toast')
+      t.textContent = msg
+      t.classList.add('show')
+      setTimeout(function() { t.classList.remove('show') }, 2500)
+    }
+
+    // upload
+    var area = document.getElementById('upload-area')
+    var input = document.getElementById('file-input')
+    var progress = document.getElementById('upload-progress')
+
+    input.addEventListener('change', function() {
+      uploadFiles(input.files)
+    })
+
+    function uploadFiles(files) {
+      try {
+        if (!files || !files.length) return
+        var formData = new FormData()
+        for (var i = 0; i < files.length; i++) {
+          formData.append('files', files[i])
+        }
+        progress.style.display = 'block'
+        progress.textContent = 'Uploading...'
+        
+        fetch('/__upload?path=' + encodeURIComponent(currentPath), {
+          method: 'POST',
+          body: formData
+        })
+        .then(function(r) { return r.json() })
+        .then(function(data) {
+          progress.style.display = 'none'
+          if (data.ok) {
+            showToast('Upload complete')
+          } else {
+            showToast('Upload failed: ' + (data.error || 'Unknown error'))
+          }
+        })
+        .catch(function(err) {
+          progress.style.display = 'none'
+          showToast('Upload failed')
+          console.error('Upload error:', err)
+        })
+      } catch (err) {
+        progress.style.display = 'none'
+        showToast('Upload failed')
+        console.error('Upload error:', err)
+      }
+    }
+
+    function createFolder() {
+      try {
+        var name = document.getElementById('folder-name').value.trim()
+        if (!name) return showToast('Enter folder name')
+        
+        fetch('/__mkdir', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: currentPath, name: name })
+        })
+        .then(function(r) { return r.json() })
+        .then(function(data) {
+          if (data.ok) {
+            document.getElementById('folder-name').value = ''
+            showToast('Folder created')
+          } else {
+            showToast('Error: ' + (data.error || 'Failed'))
+          }
+        })
+        .catch(function(err) {
+          showToast('Failed to create folder')
+          console.error('Create folder error:', err)
+        })
+      } catch (err) {
+        showToast('Failed to create folder')
+        console.error('Create folder error:', err)
+      }
+    }
+
+    window.deleteItem = function(btn) {
+      try {
+        var itemPath = btn.getAttribute('data-path')
+        if (!confirm('Delete this item?')) return
+        
+        fetch('/__delete', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: itemPath })
+        })
+        .then(function(r) { return r.json() })
+        .then(function(data) {
+          if (data.ok) {
+            showToast('Item deleted')
+          } else {
+            showToast('Error: ' + (data.error || 'Failed'))
+          }
+        })
+        .catch(function(err) {
+          showToast('Failed to delete')
+          console.error('Delete error:', err)
+        })
+      } catch (err) {
+        showToast('Failed to delete')
+        console.error('Delete error:', err)
+      }
+    }
+
+    // SSE auto-reload
+    var evts = new EventSource('/__events')
+    evts.onmessage = function() {
+      showToast('Folder updated — reloading...')
+      setTimeout(function() { location.reload() }, 1000)
+    }
+  </script>
+</body>
+</html>

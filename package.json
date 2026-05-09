@@ -1,0 +1,46 @@
+{
+  "name": "xposedir",
+  "version": "1.0.0",
+  "main": "main.js",
+  "homepage": "https://github.com/Diego-ArayaCh/XposeDir",
+  "author": {
+    "name": "Diego Araya Ch.",
+    "email": "arayachavesdiego@gmail.com"
+  },
+  "scripts": {
+    "start": "electron --ozone-platform=x11 .",
+    "build:linux": "electron-builder --linux deb AppImage",
+    "build:win": "electron-builder --win",
+    "build": "electron-builder --linux deb AppImage --win"
+  },
+  "build": {
+    "appId": "com.anioxen.xposedir",
+    "productName": "XposeDir",
+    "linux": {
+      "maintainer": "Diego Araya Ch. <arayachavesdiego@gmail.com>",
+      "target": ["deb", "AppImage"],
+      "category": "Network"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "server.js",
+      "index.html",
+      "public-view.html",
+      "styles/**",
+      "config.json"
+    ]
+  },
+  "devDependencies": {
+    "electron": "^30.0.0",
+    "electron-builder": "^24.0.0"
+  },
+  "dependencies": {
+    "bonjour-service": "^1.2.1",
+    "express": "^5.2.1",
+    "multer": "^2.1.1"
+  }
+}
