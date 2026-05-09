@@ -27,11 +27,11 @@ html.no-scroll {
 }
 
 .server-notification.starting {
-  background: #888888;
+  background: var(--primary);
 }
 
 .server-notification.stopping {
-  background: #333333;
+  background: var(--text-secondary);
 }
 
 .circle-container {
@@ -87,11 +87,11 @@ html.no-scroll {
 }
 
 .server-notification.starting .circle-ring {
-  border-color: #4caf50;
+  border-color: var(--success);
 }
 
 .server-notification.stopping .circle-ring {
-  border-color: #f44336;
+  border-color: var(--tag-write-color);
 }
 
 .circle-ring.show {
@@ -172,15 +172,15 @@ html.no-scroll {
 
 
 .server-notification.stopping, .server-notification.starting {
-  background: #333333;
+  background: var(--text-secondary);
 }
 
 .server-notification.starting .circle-ring {
-  border-color: #4caf50;
+  border-color: var(--success);
 }
 
 .server-notification.stopping .circle-ring {
-  border-color: #f44336;
+  border-color: var(--tag-write-color);
 }
 
 .server-notification.show .circle-ring {

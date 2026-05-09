@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron')
+const { app, BrowserWindow, ipcMain, dialog, shell, nativeTheme } = require('electron')
 const path = require('path')
 const fs = require('fs')
 const { spawn } = require('child_process')
@@ -21,14 +21,21 @@ function writeConfig(config) {
 }
 
 function createWindow() {
+  const isPackaged = app.isPackaged
+  const iconPath = isPackaged 
+    ? path.join(process.resourcesPath, 'app', 'build', 'icon.png')
+    : path.join(__dirname, 'build', 'icon.png')
+
   const win = new BrowserWindow({
     width: 600,
     height: 710,
-     icon: path.join(__dirname, 'build/icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js')
     }
   })
+  if (process.platform === 'linux' && fs.existsSync(iconPath)) {
+    win.setIcon(iconPath)
+  }
   win.loadFile('index.html')
   win.removeMenu(false)
   // win.webContents.openDevTools()
@@ -124,6 +131,10 @@ ipcMain.handle('save-config', (_, config) => {
 
 ipcMain.handle('open-external', (_, url) => {
   shell.openExternal(url)
+})
+
+ipcMain.handle('get-theme', () => {
+  return nativeTheme.shouldUseDarkColors ? 'dark' : 'light'
 })
 
 app.whenReady().then(createWindow)

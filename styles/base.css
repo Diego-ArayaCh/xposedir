@@ -1,62 +1,85 @@
 :root {
-  --bg: #f5f5f5;
-  --surface: #ffffff;
-  --border: #e0e0e0;
-  --border-input: #dddddd;
-  --text-primary: #222222;
-  --text-secondary: #666666;
-  --text-hint: #999999;
-  --text-folder: #333333;
-  --btn-hover: #f0f0f0;
-  --selected-border: #4a90d9;
-  --selected-bg: #f0f7ff;
-  --url-bg: #f0f7ff;
-  --url-border: #b3d4f5;
-  --url-text: #1a5fa8;
-  --stop-bg: #f0f0f0;
-  --stop-color: #333333;
-  --stop-hover: #e0e0e0;
-  --dot-inactive: #cccccc;
-  --dot-active: #4caf50;
-  --tag-read-bg: #e6f4ea;
-  --tag-read-color: #2d6a4f;
-  --tag-write-bg: #fff3e0;
-  --tag-write-color: #b45309;
-  --input-bg: #ffffff;
-  --success: #4caf50;
+  --bg: #E3F2FD;
+  --surface: #FFFFFF;
+  --border: #BBDEFB;
+  --border-input: #90CAF9;
+  --text-primary: #0D47A1;
+  --text-secondary: #1565C0;
+  --text-hint: #64B5F6;
+  --text-folder: #1565C0;
+  --btn-hover: #E1F5FE;
+  --primary: #26C6DA;
+  --primary-light: #4DD0E1;
+  --primary-dark: #00ACC1;
+  --selected-border: #26C6DA;
+  --selected-bg: #E0F7FA;
+  --url-bg: #E0F7FA;
+  --url-border: #80DEEA;
+  --url-text: #00838F;
+  --stop-bg: #ECEFF1;
+  --stop-color: #455A64;
+  --stop-hover: #CFD8DC;
+  --dot-inactive: #B0BEC5;
+  --dot-active: #26C6DA;
+  --tag-read-bg: #E0F2F1;
+  --tag-read-color: #00695C;
+  --tag-write-bg: #FFF3E0;
+  --tag-write-color: #E65100;
+  --input-bg: #FFFFFF;
+  --success: #26C6DA;
+  --scrollbar-thumb: #90CAF9;
+  --scrollbar-track: #E3F2FD;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #1a1a1a;
-    --surface: #252525;
-    --border: #333333;
-    --border-input: #3a3a3a;
-    --text-primary: #eeeeee;
-    --text-secondary: #aaaaaa;
-    --text-hint: #666666;
-    --text-folder: #cccccc;
-    --btn-hover: #2e2e2e;
-    --selected-border: #4a90d9;
-    --selected-bg: #1a2d40;
-    --url-bg: #1a2d40;
-    --url-border: #2a5070;
-    --url-text: #6ab0f5;
-    --stop-bg: #2e2e2e;
-    --stop-color: #cccccc;
-    --stop-hover: #3a3a3a;
-    --dot-inactive: #555555;
-    --dot-active: #4caf50;
-    --tag-read-bg: #1a3325;
-    --tag-read-color: #6fcf97;
-    --tag-write-bg: #2e1f00;
-    --tag-write-color: #f6b944;
-    --input-bg: #2a2a2a;
-    --success: #4caf50;
-  }
+:root[data-theme="dark"] {
+  --bg: #0A1929;
+  --surface: #132F4C;
+  --border: #1E4976;
+  --border-input: #266D8A;
+  --text-primary: #E3F2FD;
+  --text-secondary: #90CAF9;
+  --text-hint: #64B5F6;
+  --text-folder: #BBDEFB;
+  --btn-hover: #1E3A5F;
+  --primary: #4DD0E1;
+  --primary-light: #80DEEA;
+  --primary-dark: #26C6DA;
+  --selected-border: #4DD0E1;
+  --selected-bg: #0D3B4D;
+  --url-bg: #0D3B4D;
+  --url-border: #1E5880;
+  --url-text: #80DEEA;
+  --stop-bg: #1E3A5F;
+  --stop-color: #B0BEC5;
+  --stop-hover: #263238;
+  --dot-inactive: #546E7A;
+  --dot-active: #4DD0E1;
+  --tag-read-bg: #0D3B35;
+  --tag-read-color: #4DB6AC;
+  --tag-write-bg: #3D2100;
+  --tag-write-color: #FFB74D;
+  --input-bg: #0D2137;
+  --success: #4DD0E1;
+  --scrollbar-thumb: #1E4976;
+  --scrollbar-track: #0D2137;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-primary);
+}
 
 body {
   font-family: sans-serif;
@@ -69,7 +92,54 @@ body {
 h2 {
   font-size: 18px;
   font-weight: 500;
-  margin-bottom: 20px;
   display: flex;
   align-items: center;
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.header-row h2 {
+  margin-bottom: 0;
+}
+
+.theme-toggle {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.theme-toggle:hover {
+  background: var(--btn-hover);
+  border-color: var(--primary);
+}
+
+.theme-toggle svg {
+  width: 18px;
+  height: 18px;
+  color: var(--text-secondary);
+}
+
+.theme-toggle .icon-moon {
+  display: none;
+}
+
+:root[data-theme="dark"] .theme-toggle .icon-sun {
+  display: none;
+}
+
+:root[data-theme="dark"] .theme-toggle .icon-moon {
+  display: block;
 }

@@ -16,12 +16,17 @@
   "build": {
     "appId": "com.anioxen.xposedir",
     "productName": "XposeDir",
+    "directories": {
+    "buildResources": "build"
+  },
     "linux": {
       "maintainer": "Diego Araya Ch. <arayachavesdiego@gmail.com>",
       "target": ["deb", "AppImage"],
+      "icon": "build/icons",
       "category": "Network"
     },
     "win": {
+      "icon": "build/icons",
       "target": "nsis"
     },
     "files": [
@@ -31,7 +36,8 @@
       "index.html",
       "public-view.html",
       "styles/**",
-      "config.json"
+      "config.json",
+      "build/**"
     ]
   },
   "devDependencies": {

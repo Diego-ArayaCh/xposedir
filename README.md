@@ -6,7 +6,6 @@ XposeDir lets you expose any folder on your machine to your local network in sec
 
 ---
 
-
 ## Features
 
 - **One-click sharing** — select a folder and start the server instantly

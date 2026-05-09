@@ -135,17 +135,21 @@ label {
   border: none;
   cursor: pointer;
   transition: opacity .15s, background .15s;
+  background: var(--primary);
+  color: var(--surface);
 }
 
-.btn-start { background: var(--text-primary); color: var(--surface); }
-.btn-start:hover { opacity: .85; }
+.btn-main:hover { background: var(--primary-dark); }
+
+.btn-start { background: var(--primary); color: var(--surface); }
+.btn-start:hover { background: var(--primary-dark); }
 .btn-start:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn-stop {
-  background: #8b0000;
+  background: var(--tag-write-color);
   color: #fff;
 }
-.btn-stop:hover { background: #a00000; }
+.btn-stop:hover { opacity: .85; }
 
 
 

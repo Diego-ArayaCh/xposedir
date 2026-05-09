@@ -7,5 +7,6 @@ contextBridge.exposeInMainWorld('api', {
   getConfig: () => ipcRenderer.invoke('get-config'),
   saveConfig: (config) => ipcRenderer.invoke('save-config', config),
   openExternal: (url) => ipcRenderer.invoke('open-external', url),
-  discover: () => ipcRenderer.invoke('discover')
+  discover: () => ipcRenderer.invoke('discover'),
+  getTheme: () => ipcRenderer.invoke('get-theme')
 })
