@@ -1,8 +1,9 @@
 node_modules/
 dist/
 build/
-.vscode/
+*.log
+.DS_Store
+Thumbs.db
 config.json
-*.AppImage
-*.deb
-*.exe
+.env
+.env.local

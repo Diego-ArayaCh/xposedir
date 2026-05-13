@@ -27,23 +27,35 @@
       --scrollbar-thumb: #1E4976;
       --scrollbar-track: #0D2137;
     }
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    ::-webkit-scrollbar-track {
-      background: var(--scrollbar-track);
-    }
-    ::-webkit-scrollbar-thumb {
-      background: var(--scrollbar-thumb);
-      border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: var(--text);
-    }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+    ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text); }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: sans-serif; padding: 24px; background: var(--bg); color: var(--text); }
-    .header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 20px; }
+    html { min-height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 24px;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1920px;
+      margin: 0 auto;
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+      border: 1px solid var(--border);
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
     .header > div { flex: 1; }
     h2 { font-size: 18px; font-weight: 500; }
     .path { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
@@ -59,30 +71,19 @@
       align-items: center;
       justify-content: center;
     }
-    .theme-toggle svg {
-      width: 18px;
-      height: 18px;
-      color: var(--text-muted);
-    }
+    .theme-toggle svg { width: 18px; height: 18px; color: var(--text-muted); }
     .theme-toggle .icon-moon { display: none; }
     :root[data-theme="dark"] .theme-toggle .icon-sun { display: none; }
     :root[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
-    table { border-collapse: collapse; width: 100%; background: var(--surface); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
-    thead tr { border-bottom: 1px solid var(--border); }
-    th { padding: 10px 14px; font-size: 12px; font-weight: 500; color: var(--text-muted); text-align: left; }
-    td { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--text); }
-    tr:last-child td { border-bottom: none; }
-    tr:hover td { background: var(--bg); }
-    td.icon { width: 32px; padding-right: 0; }
-    td.size { color: var(--text-muted); font-size: 13px; text-align: right; white-space: nowrap; }
-    td.date { color: var(--text-muted); font-size: 13px; white-space: nowrap; }
-    a { color: var(--link); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; opacity: 0; transition: opacity 0.3s; z-index: 100; pointer-events: none; }
-    .toast.show { opacity: 1; }
+    .write-controls {
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+    }
+    .write-controls > * { flex: 1; }
     .upload-area {
       display: <UPLOAD_DISPLAY>;
-      margin-bottom: 16px;
       border: 2px dashed var(--border);
       border-radius: 8px;
       padding: 20px;
@@ -105,8 +106,7 @@
     }
     .upload-btn:hover { opacity: .85; }
     .upload-progress { margin-top: 10px; font-size: 13px; color: var(--text-muted); display: none; }
-    .write-controls { margin-bottom: 16px; display: flex; flex-direction: column; gap: 10px; }
-    .mkdir-row { display: flex; gap: 8px; }
+    .mkdir-row { display: flex; gap: 8px; display: <UPLOAD_DISPLAY>; }
     .mkdir-row input {
       flex: 1;
       padding: 8px 12px;
@@ -117,85 +117,152 @@
       color: var(--text);
     }
     .mkdir-row input:focus { outline: none; border-color: var(--link); }
-    .actions { width: 40px; }
-    .delete-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 16px;
-      opacity: 0.5;
+    @media (max-width: 600px) {
+      .write-controls { flex-direction: column; }
+      .write-controls > * { flex: none; }
     }
-    .delete-btn:hover { opacity: 1; }
+
+    /* grid toolbar */
+    .grid-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      min-height: 32px;
+    }
+    .selection-info {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .toolbar-actions { display: flex; gap: 8px; }
+    .toolbar-btn {
+      font-size: 12px;
+      padding: 5px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      transition: background .15s, opacity .15s;
+    }
+    .toolbar-btn:hover { background: var(--bg); }
+    .toolbar-btn:disabled { opacity: .4; cursor: default; }
+    .toolbar-btn.danger { border-color: #ef5350; color: #ef5350; }
+    .toolbar-btn.danger:hover { background: rgba(239,83,80,0.08); }
+
+    /* table */
+    .table-wrapper {
+      overflow-x: auto;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    table { border-collapse: collapse; width: 100%; background: var(--surface); min-width: 500px; }
+    thead tr { border-bottom: 1px solid var(--border); }
+    th { padding: 10px 14px; font-size: 12px; font-weight: 500; color: var(--text-muted); text-align: left; }
+    td { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--text); }
+    tr:last-child td { border-bottom: none; }
+    tr.selectable { cursor: pointer; user-select: none; }
+    tr.selectable:hover td { background: var(--bg); }
+    tr.selected td { background: rgba(38,198,218,0.12); }
+    tr.selected:hover td { background: rgba(38,198,218,0.18); }
+    td.icon { width: 32px; padding-right: 0; }
+    td.size { color: var(--text-muted); font-size: 13px; text-align: right; white-space: nowrap; }
+    td.date { color: var(--text-muted); font-size: 13px; white-space: nowrap; }
+    a { color: var(--link); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--primary);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 100;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .toast.show { opacity: 1; }
   </style>
 </head>
 <body>
-
-  <div class="header">
-    <div>
-      <h2>XPOSEDIR</h2>
-      <div class="path"><PATH></div>
+  <div class="container">
+    <div class="header">
+      <div>
+        <h2>XPOSEDIR</h2>
+        <div class="path"><PATH></div>
+      </div>
+      <button class="theme-toggle" onclick="toggleTheme()">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="5"/>
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
     </div>
-    <button class="theme-toggle" onclick="toggleTheme()">
-    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="12" cy="12" r="5"/>
-      <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-    </svg>
-    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-    </svg>
-  </button>
-  </div>
 
- <div class="write-controls" style="display: <UPLOAD_DISPLAY>">
-  <div class="upload-area" id="upload-area">
-    <p>Drag and drop files here or click to select</p>
-    <label class="upload-btn">
-      Choose files
-      <input type="file" id="file-input" multiple style="display:none">
-    </label>
-    <div class="upload-progress" id="upload-progress"></div>
-  </div>
-  <div class="mkdir-row write-controls" style="display: <UPLOAD_DISPLAY>">
-    <input onkeyup="enter()" type="text" id="folder-name" placeholder="New folder name" maxlength="64">
-    <button class="upload-btn" onclick="createFolder()">Create folder</button>
-  </div>
-</div>
+    <div class="write-controls" style="display: <UPLOAD_DISPLAY>">
+      <div class="upload-area" id="upload-area">
+        <p>Drag and drop files here or click to select</p>
+        <label class="upload-btn">
+          Choose files
+          <input type="file" id="file-input" multiple style="display:none">
+        </label>
+        <div class="upload-progress" id="upload-progress"></div>
+      </div>
+      <div class="mkdir-row">
+        <input onkeyup="enter(event)" type="text" id="folder-name" placeholder="New folder name" maxlength="64">
+        <button class="upload-btn" style="margin-top: 5px;" onclick="createFolder()">Create folder</button>
+      </div>
+    </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th class="icon"></th>
-        <th>Name</th>
-        <th style="text-align: right">Size</th>
-        <th>Modified</th>
-        <th class="actions" style="width: 40px;"></th>
-      </tr>
-    </thead>
-    <tbody>
-      <ROWS>
-    </tbody>
-  </table>
+    <div class="grid-toolbar">
+      <span class="selection-info" id="selection-info"></span>
+      <div class="toolbar-actions">
+        <button class="toolbar-btn" id="btn-download" onclick="downloadSelection()">⬇ Download</button>
+        <button class="toolbar-btn danger" id="btn-delete" style="display:<UPLOAD_DISPLAY>" onclick="deleteSelection()">✕ Delete</button>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th class="icon"></th>
+            <th>Name</th>
+            <th style="text-align:right">Size</th>
+            <th>Modified</th>
+          </tr>
+        </thead>
+        <tbody id="file-tbody">
+          <ROWS>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
   <div class="toast" id="toast"></div>
 
   <script>
     var currentPath = '<PATH>'
-    
-    var theme = localStorage.getItem('theme') || 'light'
-    document.documentElement.setAttribute('data-theme', theme)
+    var selected = new Set()
+    var downloadBusy = false
 
+    // theme
+    var theme = localStorage.getItem('theme') || 'dark'
+    document.documentElement.setAttribute('data-theme', theme)
     function toggleTheme() {
       theme = theme === 'light' ? 'dark' : 'light'
       document.documentElement.setAttribute('data-theme', theme)
       localStorage.setItem('theme', theme)
-      window.location.reload()
     }
 
-      function enter() {
-        if (event.key === 'Enter') {
-          createFolder()
-        }
-      }
     function showToast(msg) {
       var t = document.getElementById('toast')
       t.textContent = msg
@@ -203,113 +270,178 @@
       setTimeout(function() { t.classList.remove('show') }, 2500)
     }
 
+    // row selection
+    function initRows() {
+      var rows = document.querySelectorAll('tr.selectable')
+      rows.forEach(function(row) {
+        row.addEventListener('click', function(e) {
+          if (e.target.tagName === 'A') return  // let links work normally
+          var itemPath = row.getAttribute('data-path')
+          var href = row.getAttribute('data-href')
+
+          if (selected.has(itemPath)) {
+            // already selected — navigate
+            window.location.href = href
+            return
+          }
+
+          // select it
+          selected.forEach(function(p) {
+            var r = document.querySelector('[data-path="' + p + '"]')
+            if (r) r.classList.remove('selected')
+          })
+          selected.clear()
+          selected.add(itemPath)
+          row.classList.add('selected')
+          updateToolbar()
+        })
+      })
+    }
+
+    function updateToolbar() {
+      var info = document.getElementById('selection-info')
+      if (selected.size === 0) {
+        info.textContent = ''
+      } else {
+        info.textContent = selected.size + ' item' + (selected.size > 1 ? 's' : '') + ' selected'
+      }
+    }
+
+    // click outside table clears selection
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('table')) {
+        selected.forEach(function(p) {
+          var r = document.querySelector('[data-path="' + p + '"]')
+          if (r) r.classList.remove('selected')
+        })
+        selected.clear()
+        updateToolbar()
+      }
+    })
+
+    function downloadSelection() {
+      if (selected.size === 0) return showToast('Select at least one item first')
+      if (downloadBusy) return
+      downloadBusy = true
+      var btn = document.getElementById('btn-download')
+      btn.disabled = true
+      btn.textContent = '⬇ Downloading...'
+
+      var items = Array.from(selected)
+
+      fetch('/__download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: items })
+      })
+      .then(function(r) { return r.blob() })
+      .then(function(blob) {
+        var url = URL.createObjectURL(blob)
+        var a = document.createElement('a')
+        a.href = url
+        a.download = items.length === 1
+          ? items[0].split('/').pop()
+          : 'xposedir-download.zip'
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+
+        // clear selection
+        selected.forEach(function(p) {
+          var r = document.querySelector('[data-path="' + p + '"]')
+          if (r) r.classList.remove('selected')
+        })
+        selected.clear()
+        updateToolbar()
+      })
+      .catch(function() { showToast('Download failed') })
+      .finally(function() {
+        setTimeout(function() {
+          downloadBusy = false
+          btn.disabled = false
+          btn.textContent = '⬇ Download'
+        }, 1500)
+      })
+    }
+
+    function deleteSelection() {
+      if (selected.size === 0) return showToast('Select at least one item first')
+      if (!confirm('Delete ' + selected.size + ' item(s)?')) return
+
+      var items = Array.from(selected)
+      Promise.all(items.map(function(itemPath) {
+        return fetch('/__delete', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: itemPath })
+        }).then(function(r) { return r.json() })
+      }))
+      .then(function() {
+        selected.clear()
+        updateToolbar()
+        showToast('Deleted')
+      })
+      .catch(function() { showToast('Delete failed') })
+    }
+
+    function enter(e) {
+      if (e.key === 'Enter') createFolder()
+    }
+
     // upload
     var area = document.getElementById('upload-area')
     var input = document.getElementById('file-input')
     var progress = document.getElementById('upload-progress')
 
-    input.addEventListener('change', function() {
-      uploadFiles(input.files)
-    })
+    if (input) {
+      input.addEventListener('change', function() { uploadFiles(input.files) })
+    }
+    if (area) {
+      area.addEventListener('dragover', function(e) { e.preventDefault(); area.classList.add('dragover') })
+      area.addEventListener('dragleave', function() { area.classList.remove('dragover') })
+      area.addEventListener('drop', function(e) { e.preventDefault(); area.classList.remove('dragover'); uploadFiles(e.dataTransfer.files) })
+    }
 
     function uploadFiles(files) {
-      try {
-        if (!files || !files.length) return
-        var formData = new FormData()
-        for (var i = 0; i < files.length; i++) {
-          formData.append('files', files[i])
-        }
-        progress.style.display = 'block'
-        progress.textContent = 'Uploading...'
-        
-        fetch('/__upload?path=' + encodeURIComponent(currentPath), {
-          method: 'POST',
-          body: formData
-        })
+      if (!files || !files.length) return
+      var formData = new FormData()
+      for (var i = 0; i < files.length; i++) formData.append('files', files[i])
+      progress.style.display = 'block'
+      progress.textContent = 'Uploading...'
+      fetch('/__upload?path=' + encodeURIComponent(currentPath), { method: 'POST', body: formData })
         .then(function(r) { return r.json() })
         .then(function(data) {
           progress.style.display = 'none'
-          if (data.ok) {
-            showToast('Upload complete')
-          } else {
-            showToast('Upload failed: ' + (data.error || 'Unknown error'))
-          }
+          showToast(data.ok ? 'Upload complete' : 'Upload failed: ' + (data.error || ''))
         })
-        .catch(function(err) {
-          progress.style.display = 'none'
-          showToast('Upload failed')
-          console.error('Upload error:', err)
-        })
-      } catch (err) {
-        progress.style.display = 'none'
-        showToast('Upload failed')
-        console.error('Upload error:', err)
-      }
+        .catch(function() { progress.style.display = 'none'; showToast('Upload failed') })
     }
 
     function createFolder() {
-      try {
-        var name = document.getElementById('folder-name').value.trim()
-        if (!name) return showToast('Enter folder name')
-        
-        fetch('/__mkdir', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ path: currentPath, name: name })
-        })
-        .then(function(r) { return r.json() })
-        .then(function(data) {
-          if (data.ok) {
-            document.getElementById('folder-name').value = ''
-            showToast('Folder created')
-          } else {
-            showToast('Error: ' + (data.error || 'Failed'))
-          }
-        })
-        .catch(function(err) {
-          showToast('Failed to create folder')
-          console.error('Create folder error:', err)
-        })
-      } catch (err) {
-        showToast('Failed to create folder')
-        console.error('Create folder error:', err)
-      }
+      var name = document.getElementById('folder-name').value.trim()
+      if (!name) return showToast('Enter a folder name')
+      fetch('/__mkdir', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: currentPath, name: name })
+      })
+      .then(function(r) { return r.json() })
+      .then(function(data) {
+        if (data.ok) { document.getElementById('folder-name').value = ''; showToast('Folder created') }
+        else showToast('Error: ' + (data.error || 'Failed'))
+      })
+      .catch(function() { showToast('Failed to create folder') })
     }
 
-    window.deleteItem = function(btn) {
-      try {
-        var itemPath = btn.getAttribute('data-path')
-        if (!confirm('Delete this item?')) return
-        
-        fetch('/__delete', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ path: itemPath })
-        })
-        .then(function(r) { return r.json() })
-        .then(function(data) {
-          if (data.ok) {
-            showToast('Item deleted')
-          } else {
-            showToast('Error: ' + (data.error || 'Failed'))
-          }
-        })
-        .catch(function(err) {
-          showToast('Failed to delete')
-          console.error('Delete error:', err)
-        })
-      } catch (err) {
-        showToast('Failed to delete')
-        console.error('Delete error:', err)
-      }
-    }
-
-    // SSE auto-reload
+    // SSE
     var evts = new EventSource('/__events')
     evts.onmessage = function() {
       showToast('Folder updated — reloading...')
       setTimeout(function() { location.reload() }, 1000)
     }
+
+    initRows()
   </script>
 </body>
 </html>

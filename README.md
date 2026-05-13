@@ -1,101 +1,71 @@
 # XposeDir
 
-> Simple, fast local network file sharing — built with Electron and Express.
-
-XposeDir lets you expose any folder on your machine to your local network in seconds. No configuration, no accounts, no cloud. Just pick a folder, choose the access mode, and share.
-
----
+Simple local file sharing server with zero configuration. Share files across devices on your local network instantly.
 
 ## Features
 
-- **One-click sharing** — select a folder and start the server instantly
-- **Read only or read & write** — you decide what others can do
-- **Live browser index** — anyone on your network can browse and download files from their browser
-- **Auto-reload** — the browser index updates automatically when files change, no manual refresh needed
-- **Drag & drop upload** — in read & write mode, others can upload files directly from the browser
-- **Create folders** — create new directories remotely from the browser
-- **Network discovery** — find other XposeDir instances running on your local network
-- **Dark mode** — follows your system preference
-- **Cross-platform** — runs on Linux and Windows
+- **Zero Configuration** - Just select a folder and click Start
+- **Auto Discovery** - Other devices find your server automatically via mDNS (Bonjour) and UDP broadcast
+- **Cross Platform** - Works on Linux, Windows, and macOS
+- **Two Access Modes**
+  - Read-only: Others can view and download files
+  - Read & Write: Others can also upload, edit, and delete files
+- **Dark/Light Theme** - Toggle between themes seamlessly
+- **Network Discovery** - Scan your local network for other XposeDir instances
 
----
+## Installation
 
-## How it works
+### From Release
 
-```
-Your machine                        Other devices on LAN
-┌─────────────────────┐             ┌──────────────────┐
-│  XposeDir (Electron)│             │  Any browser     │
-│                     │  HTTP       │                  │
-│  Express server ────┼────────────►│  Browse & dl     │
-│  fs.watch + SSE  ◄──┼────────────►│  Upload files    │
-│                     │             └──────────────────┘
-│  Bonjour/mDNS    ───┼──► announces to LAN
-└─────────────────────┘
-```
+Download the latest release for your platform from the [releases page](https://github.com/Diego-ArayaCh/XposeDir/releases).
 
-XposeDir runs an Express server that serves your chosen folder over HTTP. A file watcher detects changes and notifies connected browsers via Server-Sent Events, so the file index stays live. The app announces itself on the network using mDNS (Bonjour), so other XposeDir instances can discover each other automatically.
-
----
-
-## Getting started
-
-### Requirements
-
-- Node.js 18+
-- npm
-
-### Install and run
+### Build from Source
 
 ```bash
-git clone https://github.com/Diego-ArayaCh/xposedir.git
-cd xposedir
+# Install dependencies
 npm install
+
+# Run in development
 npm start
-```
 
-### Build
-
-```bash
-# Linux (.deb + AppImage)
+# Build for Linux
 npm run build:linux
 
-# Windows (.exe installer)
+# Build for Windows
 npm run build:win
 ```
 
-Builds are output to the `dist/` folder.
-
----
-
 ## Usage
 
-1. Open XposeDir
-2. Click **Change** to select the folder you want to share
-3. Choose **Read only** or **Read & write**
-4. Set the port (default: 3000)
-5. Click **Start server**
-6. Share the URL shown with anyone on your network
+1. Launch XposeDir
+2. Click "Change" to select the folder you want to share
+3. Choose access permissions (Read only or Read & Write)
+4. Optionally change the port (default: 3000)
+5. Click "Start server"
+6. Other devices on your network will automatically discover your server
 
-In **Read only** mode, others can browse and download files.  
-In **Read & write** mode, others can also upload files and create folders.
+### Opening to Other Devices
 
-To find other XposeDir instances on your network, go to the **Discover** tab and hit **Scan**.
+- Click "Open" to open in your default browser
+- Click "Show IP" to see the local IP address
+- Click "Copy" to copy the URL to clipboard
+- Other devices can use the Discover tab to find your server
 
----
+## Tech Stack
 
-## Stack
+- Electron
+- Express.js
+- mDNS/Bonjour
+- Vanilla JavaScript (no framework)
 
-| Layer | Technology |
-|---|---|
-| Desktop shell | Electron |
-| Server | Express |
-| File uploads | Multer |
-| Live reload | fs.watch + Server-Sent Events |
-| Network discovery | Bonjour (mDNS) |
+## Contributing
 
----
+Contributions are welcome! Please read the [CONTRIBUTING](CONTRIBUTING.md) guidelines before submitting PRs.
 
 ## License
 
-MIT
+MIT License - see [LICENSE](LICENSE) for details.
+
+## Code of Conduct
+
+Please read our [Code of Conduct](CODE_OF_CONDUCT.md) to keep our community approachable and respectful.

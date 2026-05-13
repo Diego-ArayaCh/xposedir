@@ -1,11 +1,17 @@
 const { app, BrowserWindow, ipcMain, dialog, shell, nativeTheme } = require('electron')
 const path = require('path')
 const fs = require('fs')
+const dgram = require('dgram')
 const { spawn } = require('child_process')
 const { Bonjour } = require('bonjour-service')
 const bonjour = new Bonjour()
 let bonjourService = null
 const configPath = path.join(__dirname, 'config.json')
+
+const UDP_PORT = 5354
+const UDP_BROADCAST_ADDR = '255.255.255.255'
+let udpServer = null
+let udpInterval = null
 
 function readConfig() {
   try {
@@ -63,10 +69,38 @@ const server = require('./server')
 const os = require('os')
 
 
+function startUdpBroadcast(port, mode) {
+  if (udpServer) stopUdpBroadcast()
+  
+  udpServer = dgram.createSocket({ type: 'udp4', reuseAddr: true })
+  
+  udpServer.bind(() => {
+    udpServer.setBroadcast(true)
+    const hostname = os.hostname()
+    const msg = JSON.stringify({ type: 'xposedir', name: hostname, port, mode })
+    
+    udpInterval = setInterval(() => {
+      udpServer.send(msg, UDP_PORT, UDP_BROADCAST_ADDR)
+    }, 2000)
+    
+    udpServer.send(msg, UDP_PORT, UDP_BROADCAST_ADDR)
+  })
+}
+
+function stopUdpBroadcast() {
+  if (udpInterval) {
+    clearInterval(udpInterval)
+    udpInterval = null
+  }
+  if (udpServer) {
+    udpServer.close()
+    udpServer = null
+  }
+}
+
 ipcMain.handle('start-server', (_, folderPath, mode, port) => {
   server.start(folderPath, { mode, port })
 
-  // alert bonjour to make this instance discoverable on the network
   if (bonjourService) bonjourService.stop()
   bonjourService = bonjour.publish({
     name: 'xposedir-' + os.hostname(),
@@ -75,13 +109,14 @@ ipcMain.handle('start-server', (_, folderPath, mode, port) => {
     txt: { mode: mode }
   })
 
+  startUdpBroadcast(port, mode)
+
   const ip = Object.values(os.networkInterfaces())
     .flat()
     .find(i => i.family === 'IPv4' && !i.internal)?.address
 
   return {
     browser: `http://${ip}:${port}`
-    
   }
 })
 
@@ -91,16 +126,52 @@ ipcMain.handle('stop-server', () => {
     bonjourService.stop()
     bonjourService = null
   }
+  stopUdpBroadcast()
 })
 
-// discovery — search for other instances of xposedir on the local network and return their info (name, host, port, mode, url)
-ipcMain.handle('discover', () => {
+function discoverUdp() {
   return new Promise((resolve) => {
     const found = []
-    const browser = bonjour.find({ type: 'xposedir' })
+    const client = dgram.createSocket({ type: 'udp4', reuseAddr: true })
+    
+    client.on('message', (msg, rinfo) => {
+      try {
+        const data = JSON.parse(msg.toString())
+        if (data.type === 'xposedir' && data.port && data.mode) {
+          if (!found.find(s => s.host === rinfo.address && s.port === data.port)) {
+            found.push({
+              name: data.name,
+              host: rinfo.address,
+              port: data.port,
+              mode: data.mode,
+              url: `http://${rinfo.address}:${data.port}`
+            })
+          }
+        }
+      } catch (e) {}
+    })
+    
+    client.bind(UDP_PORT, () => {
+      client.setBroadcast(true)
+      client.send(JSON.stringify({ type: 'xposedir-query' }), UDP_PORT, UDP_BROADCAST_ADDR)
+    })
+    
+    setTimeout(() => {
+      client.close()
+      resolve(found)
+    }, 3000)
+  })
+}
 
+ipcMain.handle('discover', async () => {
+  const found = []
+  
+  const bonjourFound = await new Promise((resolve) => {
+    const browser = bonjour.find({ type: 'xposedir' })
+    const results = []
+    
     browser.on('up', (service) => {
-      found.push({
+      results.push({
         name: service.name,
         host: service.host,
         port: service.port,
@@ -108,13 +179,21 @@ ipcMain.handle('discover', () => {
         url: `http://${service.referer.address}:${service.port}`
       })
     })
-
-    // give it a few seconds to discover services, then stop and return what we found
+    
     setTimeout(() => {
       browser.stop()
-      resolve(found)
-    }, 3000)
+      resolve(results)
+    }, 1500)
   })
+  
+  found.push(...bonjourFound)
+  
+  if (found.length === 0) {
+    const udpFound = await discoverUdp()
+    found.push(...udpFound)
+  }
+  
+  return found
 })
 
 // ipcMain.handle('stop-server', () => {
