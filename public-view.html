@@ -149,6 +149,30 @@
     .toolbar-btn:disabled { opacity: .4; cursor: default; }
     .toolbar-btn.danger { border-color: #ef5350; color: #ef5350; }
     .toolbar-btn.danger:hover { background: rgba(239,83,80,0.08); }
+    .dl-progress {
+      margin: 12px 0;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+    }
+    .dl-progress-text { font-size: 13px; color: var(--text); margin-bottom: 8px; }
+    .dl-progress-track { height: 8px; border-radius: 4px; background: var(--border); overflow: hidden; }
+    .dl-progress-fill {
+      height: 100%; width: 0;
+      border-radius: 4px;
+      background: var(--primary);
+      transition: width .3s ease;
+    }
+    .dl-progress-fill.indeterminate {
+      width: 40% !important;
+      animation: dl-progress-slide 1.2s ease-in-out infinite;
+    }
+    @keyframes dl-progress-slide {
+      0% { margin-left: -40%; }
+      100% { margin-left: 100%; }
+    }
+    .dl-progress-actions { margin-top: 10px; display: flex; gap: 8px; }
 
     /* table */
     .table-wrapper {
@@ -230,6 +254,15 @@
       </div>
     </div>
 
+    <div class="dl-progress" id="dl-progress" style="display:none">
+      <div class="dl-progress-text" id="dl-progress-text">Preparing…</div>
+      <div class="dl-progress-track"><div class="dl-progress-fill" id="dl-progress-fill"></div></div>
+      <div class="dl-progress-actions" id="dl-progress-actions" style="display:none">
+        <button class="toolbar-btn" id="btn-dl-tar" onclick="startGetDownload(getDownloadUrl())">⬇ Download .tar</button>
+        <button class="toolbar-btn" onclick="copyDownloadCmd()">Copy curl command</button>
+      </div>
+    </div>
+
     <div class="table-wrapper">
       <table>
         <thead>
@@ -253,6 +286,8 @@
     var currentPath = '<PATH>'
     var selected = new Set()
     var downloadBusy = false
+    var downloadJobUrl = null
+    var downloadJobName = null
 
     // theme
     var theme = localStorage.getItem('theme') || 'dark'
@@ -287,7 +322,7 @@
 
           // select it
           selected.forEach(function(p) {
-            var r = document.querySelector('[data-path="' + p + '"]')
+            var r = rowByPath(p)
             if (r) r.classList.remove('selected')
           })
           selected.clear()
@@ -296,6 +331,14 @@
           updateToolbar()
         })
       })
+    }
+
+    function rowByPath(p) {
+      var found = null
+      document.querySelectorAll('tr.selectable').forEach(function(row) {
+        if (row.getAttribute('data-path') === p) found = row
+      })
+      return found
     }
 
     function updateToolbar() {
@@ -311,7 +354,7 @@
     document.addEventListener('click', function(e) {
       if (!e.target.closest('table')) {
         selected.forEach(function(p) {
-          var r = document.querySelector('[data-path="' + p + '"]')
+          var r = rowByPath(p)
           if (r) r.classList.remove('selected')
         })
         selected.clear()
@@ -319,50 +362,114 @@
       }
     })
 
-    function downloadSelection() {
-      if (selected.size === 0) return showToast('Select at least one item first')
-      if (downloadBusy) return
+    function getDownloadUrl() {
+      return downloadJobUrl || ''
+    }
+
+    function startGetDownload(url) {
       downloadBusy = true
       var btn = document.getElementById('btn-download')
       btn.disabled = true
-      btn.textContent = '⬇ Downloading...'
+      btn.textContent = '⬇ Downloading…'
+      // GET (not POST): the browser handles Content-Length + Range, so the
+      // download shows a real % and can be paused/resumed.
+      var a = document.createElement('a')
+      a.href = url
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      setTimeout(function() {
+        downloadBusy = false
+        btn.disabled = false
+        btn.textContent = '⬇ Download'
+      }, 1500)
+    }
+
+    function showPrepareProgress(text, indeterminate) {
+      var box = document.getElementById('dl-progress')
+      var fill = document.getElementById('dl-progress-fill')
+      var txt = document.getElementById('dl-progress-text')
+      var actions = document.getElementById('dl-progress-actions')
+      box.style.display = 'block'
+      txt.textContent = text
+      fill.style.width = '0'
+      fill.classList.toggle('indeterminate', !!indeterminate)
+      actions.style.display = 'none'
+    }
+
+    function showDownloadReady(text) {
+      var box = document.getElementById('dl-progress')
+      var fill = document.getElementById('dl-progress-fill')
+      var txt = document.getElementById('dl-progress-text')
+      var actions = document.getElementById('dl-progress-actions')
+      box.style.display = 'block'
+      txt.textContent = text
+      fill.classList.remove('indeterminate')
+      fill.style.width = '100%'
+      actions.style.display = 'flex'
+    }
+
+    function copyDownloadCmd() {
+      if (!downloadJobUrl) return
+      var name = downloadJobName || 'download.tar'
+      var cmd = 'curl -C - -o "' + name + '" "' + window.location.origin + downloadJobUrl + '"'
+      navigator.clipboard.writeText(cmd).then(function() {
+        showToast('curl command copied')
+      }).catch(function() {
+        showToast('Copy failed')
+      })
+    }
+
+    function downloadSelection() {
+      if (selected.size === 0) return showToast('Select at least one item first')
+      if (downloadBusy) return
 
       var items = Array.from(selected)
-
-      fetch('/__download', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: items })
+      var hasFolder = false
+      items.forEach(function(p) {
+        var r = rowByPath(p)
+        var href = r && r.getAttribute('data-href')
+        if (href && href.slice(-1) === '/') hasFolder = true
       })
-      .then(function(r) { return r.blob() })
-      .then(function(blob) {
-        var url = URL.createObjectURL(blob)
-        var a = document.createElement('a')
-        a.href = url
-        a.download = items.length === 1
-          ? items[0].split('/').pop()
-          : 'xposedir-download.zip'
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
 
-        // clear selection
-        selected.forEach(function(p) {
-          var r = document.querySelector('[data-path="' + p + '"]')
-          if (r) r.classList.remove('selected')
+      // single file -> resumable GET (Range), native browser download
+      if (!hasFolder && items.length === 1) {
+        startGetDownload('/__download?items=' + encodeURIComponent(items[0]))
+      } else {
+        // folder or several items -> virtual TAR (resumable GET), no disk use
+        downloadBusy = true
+        showPrepareProgress('Preparing index for ' + items.length + ' item(s)…', true)
+        fetch('/__prepare', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: items })
         })
-        selected.clear()
-        updateToolbar()
-      })
-      .catch(function() { showToast('Download failed') })
-      .finally(function() {
-        setTimeout(function() {
+        .then(function(r) {
+          return r.json().then(function(d) { return { status: r.status, data: d } })
+        })
+        .then(function(res) {
+          if (res.status !== 200) throw new Error(res.data && res.data.error || 'Prepare failed')
+          var job = res.data
+          downloadJobUrl = '/__archive/' + job.jobId
+          downloadJobName = job.name || 'download.tar'
+          var gb = (job.totalBytes / (1024 * 1024 * 1024)).toFixed(2)
+          showDownloadReady('Ready: ' + downloadJobName + ' · ' + gb + ' GB · ' + job.files + ' files')
+        })
+        .catch(function(e) {
+          showToast('Prepare failed: ' + (e && e.message ? e.message : e))
+        })
+        .then(function() {
           downloadBusy = false
-          btn.disabled = false
-          btn.textContent = '⬇ Download'
-        }, 1500)
+        })
+      }
+
+      // clear selection
+      selected.forEach(function(p) {
+        var r = rowByPath(p)
+        if (r) r.classList.remove('selected')
       })
+      selected.clear()
+      updateToolbar()
     }
 
     function deleteSelection() {
@@ -437,6 +544,7 @@
     // SSE
     var evts = new EventSource('/__events')
     evts.onmessage = function() {
+      if (downloadBusy) return  // don't reload while preparing/downloading
       showToast('Folder updated — reloading...')
       setTimeout(function() { location.reload() }, 1000)
     }

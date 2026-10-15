@@ -204,10 +204,19 @@ document.querySelectorAll('.opt').forEach(opt => opt.classList.remove('selected'
         return
       }
       window.scrollTo(0, 0)
-      showNotification('Server started', 'starting')
 
       const port = parseInt(document.getElementById('port').value) || 3000
-      const result = await window.api.startServer(folder, mode, port)
+
+      let result
+      try {
+        result = await window.api.startServer(folder, mode, port)
+      } catch (e) {
+        showNotification('Start failed', 'stopping')
+        alert('Could not start the server:\n\n' + (e && e.message ? e.message : e))
+        return
+      }
+
+      showNotification('Server started', 'starting')
 
       document.getElementById('url-browser').textContent = result.browser
       
@@ -215,9 +224,11 @@ document.querySelectorAll('.opt').forEach(opt => opt.classList.remove('selected'
       document.getElementById('dot').classList.add('active')
       active = true
       updateButtonState(true)
-
-      await window.api.saveConfig({ ROUTE: folder, PORT: port })
       toggleControls(true)
+
+      try {
+        await window.api.saveConfig({ ROUTE: folder, PORT: port })
+      } catch (e) {}
     }
 
     async function stopServer() {

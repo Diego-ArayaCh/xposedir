@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; color: #1c2a36; }
+  @page { size: A4 landscape; margin: 0; }
+
+  .sheet { page-break-after: always; background: #fff; }
+  .sheet:last-child { page-break-after: auto; }
+
+  .head { padding: 8mm 12mm 2mm 12mm; display: flex; justify-content: space-between; align-items: flex-end; }
+  .head h1 { font-size: 19px; margin: 0; }
+  .head p { margin: 2px 0 0; font-size: 11.5px; color: #60708a; }
+  .head .badge { font-size: 10.5px; font-weight: 700; padding: 3px 10px; border-radius: 20px; background: #0e7490; color: #fff; }
+
+  svg.flow { display: block; margin: 2mm auto; max-height: 176mm; }
+
+  /* ---- node styles ---- */
+  .navbox { fill: #eff6ff; stroke: #bfdbfe; stroke-width: 1.5; rx: 10; }
+  .srvbox { fill: #f0fdf4; stroke: #bbf7d0; stroke-width: 1.5; rx: 10; }
+  .decbox { fill: #fffbeb; stroke: #fbbf24; stroke-width: 1.5; rx: 6; }
+  .terbox { fill: #f8fafc; stroke: #94a3b8; stroke-width: 1.3; rx: 10; }
+  .errbox { fill: #fef2f2; stroke: #fca5a5; stroke-width: 1.3; rx: 8; }
+  .lanehead { fill: #e8eef5; stroke: #c3cede; stroke-width: 1.2; rx: 6; }
+  .minibox { fill: #f8fafc; stroke: #c9d4e0; stroke-width: 1.2; rx: 8; }
+
+  .t { font: 700 15px "Segoe UI", Arial, sans-serif; fill: #0f172a; text-anchor: middle; }
+  .tc { font: 700 16px "Segoe UI", Arial, sans-serif; fill: #0f172a; text-anchor: middle; }
+  .s { font: 400 12.5px "Segoe UI", Arial, sans-serif; fill: #3f4f63; text-anchor: middle; }
+  .lane { font: 700 15px "Segoe UI", Arial, sans-serif; fill: #1e293b; text-anchor: middle; text-transform: uppercase; letter-spacing: 1px; }
+  .alabel { font: 700 13px "Segoe UI", Arial, sans-serif; fill: #b45309; text-anchor: middle; }
+  .alabel.no { fill: #dc2626; }
+
+  .arrow { stroke: #475569; stroke-width: 1.7; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .arrow.dash { stroke-dasharray: 6 4; }
+  .arrow.err { stroke: #dc2626; }
+
+  .cap { padding: 0 12mm 6mm; font-size: 11.5px; color: #64748b; }
+  .cap .sym { font-family: monospace; color: #0f172a; font-weight: 700; }
+
+  /* screen mode only to take preview screenshots */
+  body[data-mode=screen] .sheet { width: 1200px; }
+  body[data-mode=screen] svg.flow { max-height: none; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ PAGE 1 — CLIENT ═══════════════ -->
+<section class="sheet">
+  <div class="head">
+    <div>
+      <h1>CLIENT — Navegador / Celular</h1>
+      <p>Entra a <b>http://IP:3000</b> · public-view.html · no instala nada · piscinas: [Navegador] y [Servidor host]</p>
+    </div>
+    <span class="badge">Flujo actual · antes de refactor</span>
+  </div>
+
+  <svg class="flow" viewBox="0 0 1200 1080" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+      </marker>
+    </defs>
+
+    <!-- swimlanes -->
+    <rect x="16" y="48" width="556" height="1016" fill="none" stroke="#bfdbfe" stroke-width="1" stroke-dasharray="5 5"/>
+    <rect x="628" y="48" width="556" height="1016" fill="none" stroke="#86efac" stroke-width="1" stroke-dasharray="5 5"/>
+    <rect class="lanehead" x="16" y="10" width="556" height="32"/>
+    <text class="lane" x="294" y="31">Navegador</text>
+    <rect class="lanehead" x="628" y="10" width="556" height="32"/>
+    <text class="lane" x="906" y="31">Servidor (host)</text>
+
+    <!-- arrows -->
+    <path class="arrow" d="M 294,138 V 202" marker-end="url(#ah)"/>
+    <path class="arrow" d="M 906,268 V 322 H 294 V 337" marker-end="url(#ah)"/>
+    <path class="arrow" d="M 294,403 V 467" marker-end="url(#ah)"/>
+    <path class="arrow" d="M 529,505 H 666" marker-end="url(#ah)"/>
+    <text class="alabel" x="600" y="496">Sí</text>
+    <path class="arrow" d="M 330,543 V 607" marker-end="url(#ah)"/>
+    <text class="alabel no" x="312" y="580">No (carpeta / varios)</text>
+    <path class="arrow" d="M 294,673 V 724 H 906 V 742" marker-end="url(#ah)"/>
+    <path class="arrow" d="M 906,808 V 850 H 600 V 890" marker-end="url(#ah)"/>
+    <path class="arrow" d="M 460,960 V 996 H 300 V 1017" marker-end="url(#ah)"/>
+    <path class="arrow" d="M 740,960 V 996 H 900 V 1017" marker-end="url(#ah)"/>
+
+    <!-- nodes -->
+    <g><rect class="navbox" x="54" y="72" width="480" height="66"/>
+      <text class="tc" x="294" y="98">Abre http://IP:3000/</text>
+      <text class="s" x="294" y="120">PC, Android o cualquier navegador de la LAN</text></g>
+
+    <g><rect class="srvbox" x="666" y="202" width="480" height="66"/>
+      <text class="tc" x="906" y="228">GET / — explora la carpeta compartida</text>
+      <text class="s" x="906" y="250">arma las filas (📁 / 📄, tamaño, fecha) y devuelve public-view.html</text></g>
+
+    <g><rect class="navbox" x="54" y="337" width="480" height="66"/>
+      <text class="tc" x="294" y="363">Muestra la tabla · conecta SSE /__events</text>
+      <text class="s" x="294" y="385">si el disco cambia (watcher) la página se recarga sola</text></g>
+
+    <g><rect class="decbox" x="79" y="467" width="430" height="76"/>
+      <text class="tc" x="294" y="497">⬇ Download</text>
+      <text class="s" x="294" y="521">¿un solo archivo?</text></g>
+
+    <g><rect class="terbox" x="666" y="472" width="480" height="66"/>
+      <text class="tc" x="906" y="498">GET /__download?items=&lt;path&gt;</text>
+      <text class="s" x="906" y="520">Content-Length + Range → descarga nativa con % y reanudable</text></g>
+
+    <g><rect class="navbox" x="54" y="607" width="480" height="66"/>
+      <text class="tc" x="294" y="633">POST /__prepare  {items}</text>
+      <text class="s" x="294" y="655">le pide al server el índice TAR de lo seleccionado</text></g>
+
+    <g><rect class="srvbox" x="666" y="742" width="480" height="66"/>
+      <text class="tc" x="906" y="768">Arma el índice TAR en RAM</text>
+      <text class="s" x="906" y="790">responde {jobId, totalBytes} · sin disco ni compresión</text></g>
+
+    <g><rect class="terbox" x="190" y="890" width="820" height="70"/>
+      <text class="tc" x="600" y="916">Barra de progreso → "Ready: Data.tar · 140.75 GB · 1703 files"</text>
+      <text class="s" x="600" y="940">el job expira solo y también se borra en Stop · botones:</text></g>
+
+    <g><rect class="terbox" x="65" y="1017" width="470" height="58"/>
+      <text class="tc" x="300" y="1040">⬇ Download .tar → GET /__archive/{id}</text>
+      <text class="s" x="300" y="1062">206 + Range · con % · reanudable</text></g>
+
+    <g><rect class="terbox" x="665" y="1017" width="470" height="58"/>
+      <text class="tc" x="900" y="1040">Copy curl → curl -C - -o Data.tar …</text>
+      <text class="s" x="900" y="1062">reanuda donde se cortó (consola / gestor)</text></g>
+  </svg>
+
+  <div class="cap">
+    <span class="sym">▭</span> proceso &nbsp;·&nbsp; <span class="sym">◇</span> decisión &nbsp;·&nbsp; <span class="sym">Sí/No</span> rama &nbsp;·&nbsp;
+    modo <b>write</b> agrega: POST /__upload · POST /__mkdir · DELETE /__delete (en modo read el host responde 403).
+  </div>
+</section>
+
+<!-- ═══════════════ PAGE 2 — HOST ═══════════════ -->
+<section class="sheet">
+  <div class="head">
+    <div>
+      <h1>HOST — App de escritorio (Electron)</h1>
+      <p>Levanta la carpeta a la LAN (puerto + modo) y descubre / abre otras instancias · main.js + server.js</p>
+    </div>
+    <span class="badge">Flujo actual · antes de refactor</span>
+  </div>
+
+  <svg class="flow" viewBox="0 0 1200 1020" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="ah2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+      </marker>
+    </defs>
+
+    <!-- arrows -->
+    <path class="arrow" d="M 396,148 V 162" marker-end="url(#ah2)"/>
+    <path class="arrow" d="M 396,228 V 308" marker-end="url(#ah2)"/>
+    <path class="arrow" d="M 396,408 V 420" marker-end="url(#ah2)"/>
+    <path class="arrow" d="M 566,447 H 895" marker-end="url(#ah2)"/>
+    <text class="alabel" x="730" y="438">Sí</text>
+    <path class="arrow" d="M 396,474 V 486" marker-end="url(#ah2)"/>
+    <text class="alabel no" x="300" y="492">No</text>
+    <path class="arrow" d="M 139,552 V 570" marker-end="url(#ah2)"/>
+    <path class="arrow" d="M 384,552 V 570" marker-end="url(#ah2)"/>
+    <path class="arrow" d="M 629,552 V 570" marker-end="url(#ah2)"/>
+    <path class="arrow" d="M 396,636 V 668" marker-end="url(#ah2)"/>
+    <path class="arrow" d="M 396,738 V 788" marker-end="url(#ah2)"/>
+    <path class="arrow" d="M 396,912 V 940" marker-end="url(#ah2)"/>
+    <text class="alabel no" x="300" y="926">No (Stop)</text>
+    <!-- discover branch (right column) -->
+    <path class="arrow" d="M 566,848 H 795 V 533 H 895" marker-end="url(#ah2)"/>
+    <text class="alabel" x="800" y="524">Sí (Discover)</text>
+    <path class="arrow" d="M 1020,554 V 596" marker-end="url(#ah2)"/>
+    <path class="arrow" d="M 1020,662 V 704" marker-end="url(#ah2)"/>
+    <path class="arrow" d="M 1020,770 V 812" marker-end="url(#ah2)"/>
+    <path class="arrow" d="M 1020,878 V 920" marker-end="url(#ah2)"/>
+
+    <!-- nodes -->
+    <g><rect class="navbox" x="16" y="82" width="760" height="66"/>
+      <text class="tc" x="396" y="108">Inicia: lee config.json (ROUTE, PORT)</text>
+      <text class="s" x="396" y="130">muestra carpeta y puerto · la IP sale oculta (botón "Mostrar IP")</text></g>
+
+    <g><rect class="navbox" x="16" y="162" width="760" height="66"/>
+      <text class="tc" x="396" y="188">Configura: carpeta (diálogo) · modo read/write · puerto</text>
+      <text class="s" x="396" y="210">workaround de xdg-desktop-portal en Linux antes de abrir el diálogo</text></g>
+
+    <g><rect class="decbox" x="16" y="308" width="760" height="100"/>
+      <text class="tc" x="396" y="346">Start → server.start(folder, {mode, port})</text>
+      <text class="s" x="396" y="374">cierra servidor anterior + watcher · construye la app Express y el watcher fs.watch (recursivo)</text>
+      <text class="s" x="396" y="398">escucha en 0.0.0.0:puerto</text></g>
+
+    <g><rect class="decbox" x="226" y="420" width="340" height="54"/>
+      <text class="tc" x="396" y="447">¿El puerto está ocupado?</text></g>
+
+    <g><rect class="terbox" x="895" y="357" width="289" height="126"/>
+      <text class="tc" x="1039" y="383">Puerto ocupado</text>
+      <text class="s" x="1039" y="410">reintenta 1 vez (300 ms)</text>
+      <text class="s" x="1039" y="430">si sigue ocupado → rechaza</text>
+      <text class="s" x="1039" y="450">(EADDRINUSE) →</text>
+      <text class="s" x="1039" y="470">"Could not start server"</text></g>
+
+    <g><rect class="srvbox" x="196" y="486" width="400" height="66"/>
+      <text class="tc" x="396" y="512">Publica en la LAN</text>
+      <text class="s" x="396" y="534">hace visible la instancia para los demás</text></g>
+
+    <g><rect class="minibox" x="24" y="570" width="230" height="66"/>
+      <text class="tc" x="139" y="592" style="font-size:13px">Bonjour / mDNS</text>
+      <text class="s" x="139" y="612" style="font-size:11.5px">servicio xposedir-&lt;hostname&gt;</text>
+      <text class="s" x="139" y="628" style="font-size:11.5px">puerto + mode</text></g>
+    <g><rect class="minibox" x="269" y="570" width="230" height="66"/>
+      <text class="tc" x="384" y="592" style="font-size:13px">UDP broadcast</text>
+      <text class="s" x="384" y="612" style="font-size:11.5px">255.255.255.255:5354</text>
+      <text class="s" x="384" y="628" style="font-size:11.5px">cada 2 s: {name, port, mode}</text></g>
+    <g><rect class="minibox" x="514" y="570" width="230" height="66"/>
+      <text class="tc" x="629" y="592" style="font-size:13px">Firewall (Windows)</text>
+      <text class="s" x="629" y="612" style="font-size:11.5px">regla de entrada "XposeDir"</text>
+      <text class="s" x="629" y="628" style="font-size:11.5px">vía netsh (falla no fatal)</text></g>
+
+    <g><rect class="srvbox" x="16" y="668" width="760" height="70"/>
+      <text class="tc" x="396" y="694">detectLanIP → muestra http://IP:puerto</text>
+      <text class="s" x="396" y="720">UDP a 8.8.8.8 para elegir la interfaz real (evita VirtualBox / WSL / Hyper-V)</text></g>
+
+    <g><rect class="decbox" x="226" y="788" width="340" height="124"/>
+      <text class="tc" x="396" y="828">¿Discovery (Scan) o Stop?</text>
+      <text class="s" x="396" y="858">mientras corre, el host sigue sirviendo</text>
+      <text class="s" x="396" y="878">el flujo CLIENT en el navegador</text></g>
+
+    <g><rect class="terbox" x="895" y="512" width="289" height="42"/>
+      <text class="tc" x="1039" y="538" style="font-size:14px">Discover — Scan</text></g>
+    <g><rect class="terbox" x="895" y="596" width="289" height="66"/>
+      <text class="tc" x="1039" y="618" style="font-size:13px">1º Bonjour find</text>
+      <text class="s" x="1039" y="638" style="font-size:11.5px">espera 1.5 s</text></g>
+    <g><rect class="terbox" x="895" y="704" width="289" height="66"/>
+      <text class="tc" x="1039" y="726" style="font-size:13px">2º si nada → UDP query</text>
+      <text class="s" x="1039" y="746" style="font-size:11.5px">espera 3 s</text></g>
+    <g><rect class="terbox" x="895" y="812" width="289" height="66"/>
+      <text class="tc" x="1039" y="834" style="font-size:13px">Lista de instancias</text>
+      <text class="s" x="1039" y="854" style="font-size:11.5px">nombre · host · puerto · modo · url</text></g>
+    <g><rect class="terbox" x="895" y="920" width="289" height="66"/>
+      <text class="tc" x="1039" y="941" style="font-size:13px">Botón "Open"</text>
+      <text class="s" x="1039" y="959" style="font-size:11.5px">abre el navegador de esa instancia</text>
+      <text class="s" x="1039" y="976" style="font-size:11.5px">→ entra al flujo CLIENT de ese host</text></g>
+
+    <g><rect class="terbox" x="16" y="940" width="760" height="66"/>
+      <text class="tc" x="396" y="966">Stop</text>
+      <text class="s" x="396" y="988">server.stop() → cierra HTTP + watcher + SSE + jobs · detiene Bonjour y el UDP broadcast</text></g>
+  </svg>
+
+  <div class="cap">
+    <span class="sym">▭</span> proceso &nbsp;·&nbsp; <span class="sym">◇</span> decisión &nbsp;·&nbsp; <span class="sym">Sí/No</span> rama &nbsp;·&nbsp;
+    la columna derecha (Discover) solo corre si el usuario presiona <b>Scan</b>; <b>Stop</b> apaga todo limpio.
+  </div>
+</section>
+
+</body>
+</html>

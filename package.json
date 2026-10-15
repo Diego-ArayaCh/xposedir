@@ -8,7 +8,8 @@
     "email": "arayachavesdiego@gmail.com"
   },
   "scripts": {
-    "start": "electron --ozone-platform=x11 .",
+    "start": "electron .",
+    "start:x11": "electron --ozone-platform=x11 .",
     "build:linux": "electron-builder --linux deb AppImage",
     "build:win": "electron-builder --win",
     "build": "electron-builder --linux deb AppImage --win"

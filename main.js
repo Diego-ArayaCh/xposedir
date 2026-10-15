@@ -2,7 +2,7 @@ const { app, BrowserWindow, ipcMain, dialog, shell, nativeTheme } = require('ele
 const path = require('path')
 const fs = require('fs')
 const dgram = require('dgram')
-const { spawn } = require('child_process')
+const { spawn, exec } = require('child_process')
 const { Bonjour } = require('bonjour-service')
 const bonjour = new Bonjour()
 let bonjourService = null
@@ -98,8 +98,67 @@ function stopUdpBroadcast() {
   }
 }
 
-ipcMain.handle('start-server', (_, folderPath, mode, port) => {
-  server.start(folderPath, { mode, port })
+function isPrivateIPv4(ip) {
+  return /^10\./.test(ip) ||
+    /^192\.168\./.test(ip) ||
+    /^172\.(1[6-9]|2\d|3[01])\./.test(ip)
+}
+
+// Finds the IP of the interface that actually routes to the LAN/internet.
+// os.networkInterfaces() order is unreliable on Windows (VirtualBox/WSL/Hyper-V
+// adapters can come first), so we ask the OS which source IP it would use.
+function detectLanIP() {
+  return new Promise((resolve) => {
+    let done = false
+    const finish = (ip) => { if (!done) { done = true; resolve(ip) } }
+
+    const socket = dgram.createSocket('udp4')
+    socket.once('error', () => {
+      try { socket.close() } catch (e) {}
+      finish(null)
+    })
+    try {
+      socket.connect(80, '8.8.8.8', () => {
+        let addr = null
+        try { addr = socket.address().address } catch (e) {}
+        try { socket.close() } catch (e) {}
+        finish(isPrivateIPv4(addr) ? addr : null)
+      })
+    } catch (e) {
+      try { socket.close() } catch (e2) {}
+      finish(null)
+    }
+  }).then((ip) => {
+    if (ip) return ip
+    const all = Object.values(os.networkInterfaces())
+      .flat()
+      .filter(i => i.family === 'IPv4' && !i.internal && !i.address.startsWith('169.254.'))
+      .map(i => i.address)
+    return all.find(isPrivateIPv4) || all[0] || null
+  })
+}
+
+let firewallChecked = false
+// Windows blocks inbound connections unless a firewall rule exists.
+// Needs elevation to actually create the rule — failure is non-fatal
+// (dev electron.exe already gets allowed by the Windows prompt).
+function ensureFirewallRule() {
+  if (process.platform !== 'win32' || firewallChecked) return
+  firewallChecked = true
+  const ruleName = '"XposeDir"'
+  const program = '"' + process.execPath + '"'
+  const opts = { windowsHide: true }
+  exec(`netsh advfirewall firewall delete rule name=${ruleName}`, opts, () => {
+    exec(`netsh advfirewall firewall add rule name=${ruleName} dir=in action=allow program=${program} enable=yes profile=any`, opts, () => {})
+  })
+}
+
+ipcMain.handle('start-server', async (_, folderPath, mode, port) => {
+  try {
+    await server.start(folderPath, { mode, port })
+  } catch (e) {
+    throw new Error('Could not start server: ' + (e && e.message ? e.message : e))
+  }
 
   if (bonjourService) bonjourService.stop()
   bonjourService = bonjour.publish({
@@ -110,10 +169,9 @@ ipcMain.handle('start-server', (_, folderPath, mode, port) => {
   })
 
   startUdpBroadcast(port, mode)
+  ensureFirewallRule()
 
-  const ip = Object.values(os.networkInterfaces())
-    .flat()
-    .find(i => i.family === 'IPv4' && !i.internal)?.address
+  const ip = (await detectLanIP()) || 'localhost'
 
   return {
     browser: `http://${ip}:${port}`
