@@ -1,0 +1,93 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.13.0'
+        classpath 'com.google.gms:google-services:4.4.4'
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+apply from: "variables.gradle"
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+// The Node.js runtime shipped by @capawesome/capacitor-nodejs is ~96 MB per ABI.
+// Trimming its symbol table takes roughly 14% off every APK. Best-effort: if the
+// NDK or the downloaded runtime is not where we expect it, the build just skips it.
+tasks.register('stripNodeRuntime') {
+    doLast {
+        def cacheDir = new File(gradle.gradleUserHomeDir, 'caches/capawesome-capacitor-nodejs')
+        def sdkDir = System.getenv('ANDROID_HOME') ?: System.getenv('ANDROID_SDK_ROOT')
+        def localProps = new File(rootProject.projectDir, 'local.properties')
+        if (!sdkDir && localProps.exists()) {
+            def props = new Properties()
+            localProps.withInputStream { props.load(it) }
+            sdkDir = props.getProperty('sdk.dir')
+        }
+        if (!sdkDir) {
+            logger.lifecycle('Android SDK not found, skipping Node runtime strip')
+            return
+        }
+        def ndkDir = new File(sdkDir, 'ndk/27.0.12077973')
+        def strip = new File(ndkDir, 'toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-strip.exe')
+        if (!strip.exists()) {
+            logger.lifecycle('llvm-strip not found, skipping Node runtime strip')
+            return
+        }
+        def stripped = 0
+        cacheDir.eachFileRecurse { f ->
+            if (!f.isFile() || f.name != 'libnode.so') return
+            def marker = new File(f.parentFile, '.stripped')
+            if (marker.exists()) return
+            def before = f.length()
+            // In-place: File.renameTo() cannot overwrite on Windows.
+            def proc = new ProcessBuilder([strip.absolutePath, '--strip-unneeded', f.absolutePath])
+                    .redirectErrorStream(true).start()
+            proc.inputStream.eachLine { }
+            if (proc.waitFor() == 0 && f.length() < before) {
+                marker.createNewFile()
+                logger.lifecycle("  libnode ${f.parentFile.name}: ${before / 1024 / 1024} MB -> ${f.length() / 1024 / 1024} MB")
+                stripped++
+            }
+        }
+        if (stripped > 0) logger.lifecycle("Stripped Node runtime in ${stripped} ABI(s)")
+    }
+}
+
+afterEvaluate {
+    def nodePlugin = project.findProject(':capawesome-capacitor-nodejs')
+    if (nodePlugin != null) {
+        rootProject.tasks.named('stripNodeRuntime').configure {
+            dependsOn(nodePlugin.tasks.named('downloadLibnode'))
+        }
+        nodePlugin.tasks.configureEach { task ->
+            if (task.name.startsWith('configureCMake') || task.name.startsWith('buildCMake')
+                    || task.name.startsWith('externalNativeBuild')) {
+                task.dependsOn(rootProject.tasks.named('stripNodeRuntime'))
+            }
+        }
+        project(':app').tasks.configureEach { task ->
+            if (task.name.startsWith('merge') || task.name.startsWith('package')
+                    || task.name.startsWith('strip')) {
+                task.dependsOn(rootProject.tasks.named('stripNodeRuntime'))
+            }
+        }
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}

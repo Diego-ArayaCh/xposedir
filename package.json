@@ -12,7 +12,14 @@
     "start:x11": "electron --ozone-platform=x11 .",
     "build:linux": "electron-builder --linux deb AppImage",
     "build:win": "electron-builder --win",
-    "build": "electron-builder --linux deb AppImage --win"
+    "build": "electron-builder --linux deb AppImage --win",
+    "android:assets": "node scripts/build-android.mjs",
+    "android:sync": "npm run android:assets && cap sync android",
+    "android:test": "node scripts/smoke-server.mjs",
+    "android:apk": "npm run android:sync && node scripts/gradlew.mjs assembleDebug",
+    "android:apk:emulator": "npm run android:sync && node scripts/gradlew.mjs assembleDebug -PxposedirEmulator",
+    "android:release": "npm run android:sync && node scripts/gradlew.mjs assembleRelease",
+    "android:run": "npm run android:apk && adb install -r android/app/build/outputs/apk/debug/app-debug.apk && adb shell am start -n com.anioxen.xposedir/.MainActivity"
   },
   "build": {
     "appId": "com.anioxen.xposedir",
@@ -45,10 +52,15 @@
     ]
   },
   "devDependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/cli": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
     "electron": "^30.0.0",
     "electron-builder": "^24.0.0"
   },
   "dependencies": {
+    "@capacitor/app": "^8.1.2",
+    "@capawesome/capacitor-nodejs": "^0.2.0",
     "archiver": "^6.0.2",
     "bonjour-service": "^1.2.1",
     "express": "^5.2.1",

@@ -7,3 +7,18 @@ Thumbs.db
 config.json
 .env
 .env.local
+
+# Android: generated from index.html / styles/ / server.js by scripts/build-android.mjs
+www/
+android/local.properties
+android/app/build/
+android/build/
+android/.gradle/
+android/capacitor-cordova-android-plugins/
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+*.apk
+*.aab
+*.jks
+*.keystore

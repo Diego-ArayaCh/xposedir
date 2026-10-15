@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">XposeDir</string>
+    <string name="title_activity_main">XposeDir</string>
+    <string name="package_name">com.anioxen.xposedir</string>
+    <string name="custom_url_scheme">com.anioxen.xposedir</string>
+</resources>
